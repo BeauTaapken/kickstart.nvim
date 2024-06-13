@@ -204,13 +204,12 @@ vim.api.nvim_create_autocmd('TextYankPost', {
   end,
 })
 
-
 vim.api.nvim_create_autocmd('BufWinEnter', {
   desc = 'Open neo-tree by default',
-  group = vim.api.nvim_create_augroup("neotree_autoopen", { clear = true }),
+  group = vim.api.nvim_create_augroup('neotree_autoopen', { clear = true }),
   callback = function()
     if not vim.g.neotree_opened then
-      vim.cmd "Neotree show"
+      vim.cmd 'Neotree show'
       vim.g.neotree_opened = true
     end
   end,
@@ -889,7 +888,7 @@ require('lazy').setup({
   require 'kickstart.plugins.indent_line',
   -- require 'kickstart.plugins.lint',
   -- require 'kickstart.plugins.autopairs',
-  require 'kickstart.plugins.neo-tree',
+  require('kickstart.plugins.neo-tree'),
   -- require 'kickstart.plugins.gitsigns', -- adds gitsigns recommend keymaps
 
   -- NOTE: The import below can automatically add your own plugins, configuration, etc from `lua/custom/plugins/*.lua`
