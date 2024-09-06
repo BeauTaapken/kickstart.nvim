@@ -591,7 +591,7 @@ require('lazy').setup({
         --
         yamlls = {},
 
-        tsserver = {
+        ts_ls = {
           'pmizio/typescript-tools.nvim',
           dependencies = { 'nvim-lua/plenary.nvim', 'neovim/nvim-lspconfig' },
           opts = {},
