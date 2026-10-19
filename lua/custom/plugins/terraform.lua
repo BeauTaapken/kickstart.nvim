@@ -1,81 +1,46 @@
-return {
-  -- 1) Treesitter: add terraform + hcl parsers
-  {
-    'nvim-treesitter/nvim-treesitter',
-    opts = function(_, opts)
-      opts = opts or {}
-      opts.ensure_installed = opts.ensure_installed or {}
-      for _, lang in ipairs { 'terraform', 'hcl' } do
-        if not vim.tbl_contains(opts.ensure_installed, lang) then
-          table.insert(opts.ensure_installed, lang)
-        end
-      end
-      return opts
-    end,
-  },
+-- 1) Treesitter: install terraform + hcl parsers
+-- kickstart's vim.pack treesitter setup does not use ensure_installed;
+-- the new API is require('nvim-treesitter').install { ... }
+require('nvim-treesitter').install({ 'terraform', 'hcl' })
 
-  -- 2) LSP: extend Kickstart's lsp plugin (no direct lspconfig.setup)
-  {
-    'neovim/nvim-lspconfig',
-    opts = function(_, opts)
-      opts = opts or {}
-      opts.servers = opts.servers or {}
-      -- Kickstart will call lspconfig for you using this table
-      opts.servers.terraformls = {
-        filetypes = { 'terraform', 'terraform-vars', 'hcl' },
-      }
-      return opts
-    end,
-  },
-  {
-    'williamboman/mason-lspconfig.nvim',
-    opts = function(_, opts)
-      opts = opts or {}
-      opts.ensure_installed = opts.ensure_installed or {}
-      if not vim.tbl_contains(opts.ensure_installed, 'terraformls') then
-        table.insert(opts.ensure_installed, 'terraformls')
-      end
-      return opts
-    end,
-  },
+-- 2) LSP: terraformls
+-- kickstart's vim.pack init.lua defines a `servers` table and then calls
+-- vim.lsp.config / vim.lsp.enable. You must add to that table in init.lua,
+-- or define the server yourself here:
+vim.lsp.config('terraformls', {
+  filetypes = { 'terraform', 'terraform-vars', 'hcl' },
+})
+vim.lsp.enable('terraformls')
 
-  -- 3) Formatting: terraform fmt via conform.nvim
-  {
-    'stevearc/conform.nvim',
-    opts = function(_, opts)
-      opts = opts or {}
-      opts.formatters_by_ft = opts.formatters_by_ft or {}
-      opts.formatters_by_ft.terraform = { 'terraform_fmt' }
-      opts.formatters_by_ft['terraform-vars'] = { 'terraform_fmt' }
-      opts.formatters_by_ft.hcl = { 'terraform_fmt' }
-      return opts
-    end,
+-- 3) Formatting: terraform_fmt via conform.nvim
+-- kickstart may already require('conform').setup { ... }. Calling setup again
+-- would overwrite it. If kickstart's conform config is accessible, mutate it
+-- before setup; otherwise provide your own full setup:
+require('conform').setup {
+  formatters_by_ft = {
+    terraform = { 'terraform_fmt' },
+    ['terraform-vars'] = { 'terraform_fmt' },
+    hcl = { 'terraform_fmt' },
   },
+}
 
-  -- 4) Linting: tflint via nvim-lint (fixed require + callback)
-  {
-    'mfussenegger/nvim-lint',
-    config = function()
-      local lint = require 'lint'
-      lint.linters_by_ft = lint.linters_by_ft or {}
-      lint.linters_by_ft.terraform = { 'tflint' }
-      lint.linters_by_ft['terraform-vars'] = { 'tflint' }
+-- 4) Linting: tflint via nvim-lint
+local lint = require 'lint'
+lint.linters_by_ft = lint.linters_by_ft or {}
+lint.linters_by_ft.terraform = { 'tflint' }
+lint.linters_by_ft['terraform-vars'] = { 'tflint' }
 
-      vim.api.nvim_create_autocmd({ 'BufWritePost', 'BufEnter', 'InsertLeave' }, {
-        callback = function()
-          require('lint').try_lint()
-        end,
-      })
-    end,
-  },
+vim.api.nvim_create_autocmd({ 'BufWritePost', 'BufEnter', 'InsertLeave' }, {
+  callback = function()
+    require('lint').try_lint()
+  end,
+})
 
-  -- (Optional) 5) Auto-install CLI tools like tflint
-  {
-    'WhoIsSethDaniel/mason-tool-installer.nvim',
-    opts = {
-      ensure_installed = { 'tflint', 'terraform-ls' }, -- terraform-ls is harmless if already installed
-      run_on_start = true,
-      auto_update = false,
-    },
-  },
+-- 5) Auto-install CLI tools
+-- mason-tool-installer still works with vim.pack; add it and call setup
+vim.pack.add { 'https://github.com/WhoIsSethDaniel/mason-tool-installer.nvim' }
+require('mason-tool-installer').setup {
+  ensure_installed = { 'tflint', 'terraform-ls' },
+  run_on_start = true,
+  auto_update = false,
 }
